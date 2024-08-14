@@ -1,0 +1,19 @@
+<template>
+    <lightning-card title="Opportunity Products" icon-name="standard:opportunity">
+        <template if:true={products}>
+            <lightning-datatable
+                key-field="id"
+                data={products}
+                columns={columns}
+                hide-checkbox-column>
+            </lightning-datatable>
+        </template>
+        <template if:false={products}>
+            <div class="slds-p-horizontal_medium slds-p-vertical_small">
+                <p>Vous n'avez aucune ligne de produits pour le moment.</p>
+                <p>1. Veuillez sélectionner tout d'abord un catalogue (Pricebook).</p>
+                <p>2. Sélectionnez ensuite les produits à ajouter.</p>
+            </div>
+        </template>
+    </lightning-card>
+</template>

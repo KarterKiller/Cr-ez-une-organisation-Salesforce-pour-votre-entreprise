@@ -1,0 +1,23 @@
+[33mcommit 603dfcdbdc4cc6a5fe0e2d40efe8fb47568ff930[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: Tayassi karim <karter.t@gmail.com>
+Date:   Wed Aug 14 11:16:03 2024 +0200
+
+    Création tableau produits opportunités
+
+[33mcommit dfc3a680ab24431928086ac5546d1f90f9c0e573[m
+Author: AMOL <anthony.moliere2904@gmail.com>
+Date:   Wed May 29 15:41:29 2024 +0200
+
+    Delete README.md
+    
+    Suppression readme auto généré
+
+[33mcommit 78fc4d46718b2cbbb9337b39469a75970e0731d5[m
+Author: AMOL <anthony.moliere2904@gmail.com>
+Date:   Sat Apr 6 12:43:20 2024 +0200
+
+    Readme initialisation & création des donnés
+    
+    Ajout du readme avec les étapes à suivre pour mettre en place le projet
+    + Creation du dossier contenant le projet SF
+    + Création d'un script apex qui va aller créer les données Product2 / Pricebook et PricebookEntry (à modifier plus tard si nécessaire)

@@ -77,10 +77,6 @@ export default class OpportunityProductTable extends NavigationMixin(LightningEl
             this.isProductListEmpty = true;
             this.hasProducts = false;  // No products in case of an error
         }
-        console.log('Products:', this.products);
-        console.log('Has products:', this.hasProducts);
-        console.log('Is product list empty:', this.isProductListEmpty);
-
     }
 
     handleRowAction(event) {
@@ -89,9 +85,10 @@ export default class OpportunityProductTable extends NavigationMixin(LightningEl
         console.log('Action Name:', actionName);  // Vérifie le nom de l'action
         console.log('Row Data:', row);  // Vérifie les données de la ligne
 
-
+    
         switch (actionName) {
             case 'view':
+                console.log('Navigating to product:', row.productId);  //  log pour vérifier l'appel de la méthode
                 this.navigateToProduct(row.productId);
                 break;
             case 'delete':

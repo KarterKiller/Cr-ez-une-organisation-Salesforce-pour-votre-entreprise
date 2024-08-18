@@ -1,4 +1,5 @@
 public with sharing class OpportunityProductController {
+    
     @AuraEnabled(cacheable=true)
     public static List<OpportunityProductWrapper> getOpportunityLineItems(Id opportunityId) {
         List<OpportunityProductWrapper> items = new List<OpportunityProductWrapper>();
@@ -20,15 +21,21 @@ public with sharing class OpportunityProductController {
         return items;
     }
 
+    @AuraEnabled(cacheable=true)
+    public static Boolean isUserCommercial() {
+        String profileName = [SELECT Name FROM Profile WHERE Id = :UserInfo.getProfileId()].Name;
+        return profileName == 'Commercial'; // Remplacez 'Commercial' par le nom exact du profil des commerciaux dans votre organisation
+    }
+
     public class OpportunityProductWrapper {
         @AuraEnabled public String productName { get; set; }
         @AuraEnabled public Decimal unitPrice { get; set; }
         @AuraEnabled public Decimal totalPrice { get; set; }
         @AuraEnabled public Decimal quantity { get; set; }
         @AuraEnabled public Decimal quantityInStock { get; set; }
-        @AuraEnabled public Id productId { get; set; }  // Propriété pour stocker l'ID du produit
+        @AuraEnabled public String productId { get; set; }
 
-        public OpportunityProductWrapper(String productName, Decimal unitPrice, Decimal totalPrice, Decimal quantity, Decimal quantityInStock, Id productId) {
+        public OpportunityProductWrapper(String productName, Decimal unitPrice, Decimal totalPrice, Decimal quantity, Decimal quantityInStock, String productId) {
             this.productName = productName;
             this.unitPrice = unitPrice;
             this.totalPrice = totalPrice;
@@ -38,4 +45,3 @@ public with sharing class OpportunityProductController {
         }
     }
 }
-

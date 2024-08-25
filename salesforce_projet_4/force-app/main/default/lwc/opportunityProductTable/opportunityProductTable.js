@@ -1,10 +1,10 @@
 import { LightningElement, api, wire, track } from 'lwc';
 import getOpportunityLineItems from '@salesforce/apex/OpportunityProductController.getOpportunityLineItems';
 import isUserCommercial from '@salesforce/apex/OpportunityProductController.isUserCommercial';
-import { deleteRecord } from 'lightning/uiRecordApi';
+import deleteOpportunityLineItemAndProduct from '@salesforce/apex/OpportunityProductController.deleteOpportunityLineItemAndProduct';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { NavigationMixin } from 'lightning/navigation';
-import { refreshApex } from '@salesforce/apex'; // Importation pour rafraîchir les données
+import { refreshApex } from '@salesforce/apex';
 
 export default class OpportunityProductTable extends NavigationMixin(LightningElement) {
     @api recordId;
@@ -71,7 +71,7 @@ export default class OpportunityProductTable extends NavigationMixin(LightningEl
             console.log('Data received:', data);
             this.products = data.map(item => {
                 const stockDifference = item.quantityInStock - item.quantity;
-                console.log('Stock Difference:', stockDifference); // Vérification du calcul de la différence de stock
+                console.log('Stock Difference:', stockDifference);
 
                 let quantityStyle = '';
                 if (stockDifference < 0) {
@@ -106,11 +106,11 @@ export default class OpportunityProductTable extends NavigationMixin(LightningEl
 
         switch (actionName) {
             case 'view':
-                console.log('Navigating to product:', row.productId);
-                this.navigateToProduct(row.productId);
+                console.log('Navigating to product:', row.opportunityLineItemId);
+                this.navigateToProduct(row.opportunityLineItemId);
                 break;
             case 'delete':
-                this.deleteProduct(row.productId);
+                this.deleteOpportunityLineItem(row.opportunityLineItemId);
                 break;
             default:
                 break;
@@ -129,18 +129,19 @@ export default class OpportunityProductTable extends NavigationMixin(LightningEl
         });
     }
 
-    // Suppression d'un produit
-    deleteProduct(productId) {
-        deleteRecord(productId)
+    // Suppression de l'OpportunityLineItem
+    deleteOpportunityLineItem(opportunityLineItemId) {
+        console.log('Deleting Opportunity Line Item with ID:', opportunityLineItemId);
+        deleteOpportunityLineItemAndProduct({ opportunityLineItemId })
             .then(() => {
                 this.dispatchEvent(
                     new ShowToastEvent({
                         title: 'Success',
-                        message: 'Product deleted',
+                        message: 'Opportunity Line Item ans associated Product deleted',
                         variant: 'success'
                     })
                 );
-                return refreshApex(this.wiredOpportunityProducts); // Rafraîchir les données après la suppression
+                return refreshApex(this.wiredOpportunityProducts);
             })
             .catch(error => {
                 this.dispatchEvent(
@@ -155,8 +156,7 @@ export default class OpportunityProductTable extends NavigationMixin(LightningEl
 
     // Mise à jour des colonnes en fonction du profil de l'utilisateur
     setColumns() {
-        if (!this.isCommercial) {
-            // Si l'utilisateur n'est pas un commercial, la colonne "Voir Produit" est supprimée
+        if (this.isCommercial) {
             this.columns = this.columns.filter(column => column.label !== 'Voir Produit');
         }
     }

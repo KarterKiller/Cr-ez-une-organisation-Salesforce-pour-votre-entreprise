@@ -52,7 +52,7 @@ export default class OpportunityProductTable extends NavigationMixin(LightningEl
                 alignment: 'right'
             }
         },
-        { label: this.label.QuantityInStockLabel, fieldName: 'quantityInStock', type: 'number' },
+        { label: this.label.quantityInStockLabel, fieldName: 'quantityInStock', type: 'number' },
         {
             label: this.label.SeeProductLabel,
             type: 'button',

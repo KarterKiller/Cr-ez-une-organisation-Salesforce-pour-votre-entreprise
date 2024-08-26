@@ -5,18 +5,46 @@ import deleteOpportunityLineItemAndProduct from '@salesforce/apex/OpportunityPro
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { NavigationMixin } from 'lightning/navigation';
 import { refreshApex } from '@salesforce/apex';
+import LINE_QUANTITY_PROBLEM from '@salesforce/label/c.lineQuantityproblem';
+import PRICE_BOOK_AND_ADD_PRODUCT from '@salesforce/label/c.pricebookAndAddProduct';
+import QUANTITY_IN_STOCK_LABEL from '@salesforce/label/c.quantityInStockLabel';
+import UNIT_PRICE_LABEL from '@salesforce/label/c.UnitPriceLabel';
+import TOTAL_PRICE_LABEL from '@salesforce/label/c.TotalPriceLabel';
+import SEE_PRODUCT_LABEL from '@salesforce/label/c.SeeProductLabel';
+import PRODUCT_NAME_LABEL from '@salesforce/label/c.ProductNameLabel';
+import DELETE_LABEL from '@salesforce/label/c.DeleteLabel';
+import OPPORTUNITY_PRODUCTS_LABEL from '@salesforce/label/c.opportunityProductsLabel';
+import QUANTITY_LABEL from '@salesforce/label/c.QuantityLabel';
+import VIEW_PRODUCT_BUTTON from '@salesforce/label/c.ViewProductButton';
+
 
 export default class OpportunityProductTable extends NavigationMixin(LightningElement) {
+    
+    label = {
+        lineQuantityProblem: LINE_QUANTITY_PROBLEM,
+        pricebookAndAddProduct: PRICE_BOOK_AND_ADD_PRODUCT,
+        quantityInStockLabel: QUANTITY_IN_STOCK_LABEL,
+        QuantityLabel: QUANTITY_LABEL,
+        UnitPriceLabel: UNIT_PRICE_LABEL,
+        TotalPriceLabel: TOTAL_PRICE_LABEL,
+        SeeProductLabel: SEE_PRODUCT_LABEL,
+        ProductNameLabel: PRODUCT_NAME_LABEL,
+        DeleteLabel: DELETE_LABEL,
+        opportunityProductsLabel: OPPORTUNITY_PRODUCTS_LABEL,
+        ViewProductButton: VIEW_PRODUCT_BUTTON
+
+    };
+ 
     @api recordId;
     @track hasNegativeQuantity = false;
     @track isCommercial = false;
 
     @track columns = [
-        { label: 'Product Name', fieldName: 'productName', type: 'text' },
-        { label: 'Unit Price', fieldName: 'unitPrice', type: 'currency' },
-        { label: 'Total Price', fieldName: 'totalPrice', type: 'currency' },
+        { label: this.label.ProductNameLabel, fieldName: 'productName', type: 'text' },
+        { label: this.label.UnitPriceLabel, fieldName: 'unitPrice', type: 'currency' },
+        { label: this.label.TotalPriceLabel, fieldName: 'totalPrice', type: 'currency' },
         { 
-            label: 'Quantity', 
+            label: this.label.QuantityLabel, 
             fieldName: 'quantity', 
             type: 'number',
             cellAttributes: {
@@ -24,12 +52,12 @@ export default class OpportunityProductTable extends NavigationMixin(LightningEl
                 alignment: 'right'
             }
         },
-        { label: 'Quantity In Stock', fieldName: 'quantityInStock', type: 'number' },
+        { label: this.label.QuantityInStockLabel, fieldName: 'quantityInStock', type: 'number' },
         {
-            label: 'Voir Produit',
+            label: this.label.SeeProductLabel,
             type: 'button',
             typeAttributes: {
-                label: 'Voir',
+                label: this.label.ViewProductButton,
                 name: 'view',
                 iconName: 'utility:preview',
                 iconPosition: 'left',
@@ -37,14 +65,14 @@ export default class OpportunityProductTable extends NavigationMixin(LightningEl
             }
         },
         {
-            label: 'Supprimer',
+            label: this.label.DeleteLabel,
             type: 'button-icon',
             typeAttributes: {
                 iconName: 'utility:delete',
-                name: 'delete',
+                name: 'Delete',
                 variant: 'bare',
-                alternativeText: 'Supprimer',
-                title: 'Supprimer'
+                alternativeText: 'Delete',
+                title: 'Delete'
             }
         }
     ];

@@ -1,10 +1,10 @@
 <template>
-    <lightning-card title="Opportunity Products" icon-name="standard:opportunity">
+    <lightning-card title={label.opportunityProductsLabel} icon-name="standard:opportunity">
         <!-- Affiche le message d'avertissement si hasNegativeQuantity est vrai -->
         <template if:true={hasNegativeQuantity}>
             <div class="slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_warning slds-m-around_large">
                 <span class="slds-assistive-text">Warning</span>
-                <p>Vous avez au moins une ligne avec un problème de quantité. Veuillez supprimer cette ligne ou réduire sa quantité. Si vous avez absolument besoin de plus de produits, veuillez contacter votre administrateur système.</p>
+                <p>{label.lineQuantityProblem}</p>
             </div>
         </template>
 
@@ -22,9 +22,7 @@
         <!-- Affiche le message si aucun produit n'est disponible -->
         <template if:true={isProductListEmpty}>
             <div class="slds-var-p-around_medium">
-                <p>Vous n'avez aucune ligne de produits pour le moment.</p>
-                <p>1. Veuillez sélectionner tout d'abord un catalogue (Pricebook).</p>
-                <p>2. Sélectionnez ensuite les produits à ajouter.</p>
+                <p>{label.PricebookAndAddProduct}</p>
             </div>
         </template>
     </lightning-card>

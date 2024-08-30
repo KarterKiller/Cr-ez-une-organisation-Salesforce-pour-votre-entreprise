@@ -6,7 +6,7 @@ import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { NavigationMixin } from 'lightning/navigation';
 import { refreshApex } from '@salesforce/apex';
 import LINE_QUANTITY_PROBLEM from '@salesforce/label/c.lineQuantityproblem';
-import PRICE_BOOK_AND_ADD_PRODUCT from '@salesforce/label/c.pricebookAndAddProduct';
+import PRICE_BOOK_AND_ADD_PRODUCT from '@salesforce/label/c.PricebookAndAddProduct';
 import QUANTITY_IN_STOCK_LABEL from '@salesforce/label/c.quantityInStockLabel';
 import UNIT_PRICE_LABEL from '@salesforce/label/c.UnitPriceLabel';
 import TOTAL_PRICE_LABEL from '@salesforce/label/c.TotalPriceLabel';
@@ -22,7 +22,7 @@ export default class OpportunityProductTable extends NavigationMixin(LightningEl
     
     label = {
         lineQuantityProblem: LINE_QUANTITY_PROBLEM,
-        pricebookAndAddProduct: PRICE_BOOK_AND_ADD_PRODUCT,
+        PricebookAndAddProduct: PRICE_BOOK_AND_ADD_PRODUCT,
         quantityInStockLabel: QUANTITY_IN_STOCK_LABEL,
         QuantityLabel: QUANTITY_LABEL,
         UnitPriceLabel: UNIT_PRICE_LABEL,
@@ -38,6 +38,13 @@ export default class OpportunityProductTable extends NavigationMixin(LightningEl
     @api recordId;
     @track hasNegativeQuantity = false;
     @track isCommercial = false;
+
+    get formattedLabel() {
+        // balises HTML pour le style (gras et rouge)
+        return `<strong style="color: red;">${this.label.PricebookAndAddProduct}</strong>`;
+
+    }
+
 
     @track columns = [
         { label: this.label.ProductNameLabel, fieldName: 'productName', type: 'text' },
@@ -69,7 +76,7 @@ export default class OpportunityProductTable extends NavigationMixin(LightningEl
             type: 'button-icon',
             typeAttributes: {
                 iconName: 'utility:delete',
-                name: 'Delete',
+                name: 'delete',
                 variant: 'bare',
                 alternativeText: 'Delete',
                 title: 'Delete'
@@ -92,8 +99,8 @@ export default class OpportunityProductTable extends NavigationMixin(LightningEl
         }
     }
 
-    // Récupération des lignes de produits
-    @wire(getOpportunityLineItems, { opportunityId: '$recordId' })
+    // Récupération des lignes de produits afin d'y appliquer un style de couleur en fonction du résultat de l'opération. ( rouge ou vert)
+    @wire(getOpportunityLineItems, { opportunityId: '$recordId' }) 
     wiredOpportunityProducts({ error, data }) {
         if (data) {
             console.log('Data received:', data);
@@ -114,13 +121,13 @@ export default class OpportunityProductTable extends NavigationMixin(LightningEl
                     quantityStyle
                 };
             });
-            this.hasProducts = this.products.length > 0;
+            this.hasProducts = this.products.length > 0; 
             this.isProductListEmpty = !this.hasProducts;
         } else if (error) {
             console.error('Error fetching opportunity line items:', error);
-            this.error = error;
+            this.error = error; // en cas d"erreur, stock l'erreur dans this.error
             this.products = [];
-            this.isProductListEmpty = true;
+            this.isProductListEmpty = true; // Si errror alors réinitialiser la liste des produits
             this.hasProducts = false;
         }
     }

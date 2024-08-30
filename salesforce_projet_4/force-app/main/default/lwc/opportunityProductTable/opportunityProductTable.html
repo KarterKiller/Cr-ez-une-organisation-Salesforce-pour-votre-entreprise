@@ -22,7 +22,7 @@
         <!-- Affiche le message si aucun produit n'est disponible -->
         <template if:true={isProductListEmpty}>
             <div class="slds-var-p-around_medium">
-                <p>{label.PricebookAndAddProduct}</p>
+                <lightning-formatted-rich-text value={formattedLabel}></lightning-formatted-rich-text>
             </div>
         </template>
     </lightning-card>

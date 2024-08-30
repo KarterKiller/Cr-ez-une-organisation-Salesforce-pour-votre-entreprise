@@ -1,19 +1,19 @@
 public with sharing class OpportunityProductController {
 
-    @AuraEnabled(cacheable=true)
-    public static List<OpportunityProductWrapper> getOpportunityLineItems(Id opportunityId) {
-        if (!Schema.sObjectType.OpportunityLineItem.isAccessible()) {
-            throw new CustomException('Vous n\'avez pas les permissions nécessaires pour accéder aux Opportunity Line Items.');
+    @AuraEnabled(cacheable=true) // cacheable permet de mettre en cache les résultats de l'appel à la méthode.
+    public static List<OpportunityProductWrapper> getOpportunityLineItems(Id opportunityId) { // Elle prends en paramètre l'Id d'un op. 
+        if (!Schema.sObjectType.OpportunityLineItem.isAccessible()) { // Vérification si l'utilisateur à les permissions necessaires. 
+            throw new CustomException('Vous n\'avez pas les permissions nécessaires pour accéder aux Opportunity Line Items.'); // CustomException permet de définir une exception personnalisée.
         }
 
         List<OpportunityProductWrapper> items = new List<OpportunityProductWrapper>();
         for (OpportunityLineItem item : [
-            SELECT Product2.Name, UnitPrice, TotalPrice, Quantity,
+            SELECT Product2.Name, UnitPrice, TotalPrice, Quantity, // Requete SOQL pour récupérer les OpportunityLineItems associés à l'opportunité spécifiée par opportunityId.
                    Product2.QuantityInStock__c, Product2.Id, Id
             FROM OpportunityLineItem
             WHERE OpportunityId = :opportunityId
         ]) {
-            items.add(new OpportunityProductWrapper(
+            items.add(new OpportunityProductWrapper( // Les résultats sont encapsulés dans des objets OpportunityProductWrapper pour faciliter leur utilisation.
                 item.Product2.Name, 
                 item.UnitPrice, 
                 item.TotalPrice, 
@@ -25,7 +25,7 @@ public with sharing class OpportunityProductController {
         }
         return items;
     }
-
+    //Peut etre appelé à partir de composants LWC/Aura
     @AuraEnabled
     public static void deleteOpportunityLineItemAndProduct(Id opportunityLineItemId) {
         System.debug('OpportunityLineItem ID received for deletion: ' + opportunityLineItemId);
@@ -67,18 +67,18 @@ public with sharing class OpportunityProductController {
         Profile p = [SELECT Name FROM Profile WHERE Id = :UserInfo.getProfileId()];
         return p.Name == 'Commercial';
     }
+    // Classe utilisée pour lancer une exception si l'utilisateur n'a pas les permissions nécessaires pour accéder aux données OpportunityLineItem.
+    public class CustomException extends Exception {} 
 
-    public class CustomException extends Exception {}
-
-    public class OpportunityProductWrapper {
-        @AuraEnabled public String productName { get; set; }
+    public class OpportunityProductWrapper { 
+        @AuraEnabled public String productName { get; set; } 
         @AuraEnabled public Decimal unitPrice { get; set; }
         @AuraEnabled public Decimal totalPrice { get; set; }
         @AuraEnabled public Decimal quantity { get; set; }
         @AuraEnabled public Decimal quantityInStock { get; set; }
         @AuraEnabled public Id productId { get; set; } // Utilisation de l'Id de Product2
         @AuraEnabled public Id opportunityLineItemId { get; set; } // Utilisation de l'Id de OpportunityLineItem
-
+        // Encapsulation des champs spécifiques d'un enregsitrement Salesforce. 
         public OpportunityProductWrapper(String productName, Decimal unitPrice, Decimal totalPrice, Decimal quantity, Decimal quantityInStock, Id productId, Id opportunityLineItemId) {
             this.productName = productName;
             this.unitPrice = unitPrice;

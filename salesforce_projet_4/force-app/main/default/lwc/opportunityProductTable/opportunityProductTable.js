@@ -19,7 +19,7 @@ import VIEW_PRODUCT_BUTTON from '@salesforce/label/c.ViewProductButton';
 
 
 export default class OpportunityProductTable extends NavigationMixin(LightningElement) {
-    
+    // Custom Labels
     label = {
         lineQuantityProblem: LINE_QUANTITY_PROBLEM,
         PricebookAndAddProduct: PRICE_BOOK_AND_ADD_PRODUCT,
@@ -35,9 +35,9 @@ export default class OpportunityProductTable extends NavigationMixin(LightningEl
 
     };
  
-    @api recordId;
-    @track hasNegativeQuantity = false;
-    @track isCommercial = false;
+    @api recordId; // @Api décorateur rendant une propriété publique accessible depuis l'extérieur. expose les propriétés aux composants parents. 
+    @track hasNegativeQuantity = false; // Décorateur rendant une propriété réactive. 
+    @track isCommercial = false; // propriété réactive booléenne suivie
 
     get formattedLabel() {
         // balises HTML pour le style (gras et rouge)
@@ -152,7 +152,7 @@ export default class OpportunityProductTable extends NavigationMixin(LightningEl
         }
     }
 
-    // Navigation vers la page du produit
+    // Méthode de Navigation vers la page du produit spécifique à Salesforce. 
     navigateToProduct(productId) {
         this[NavigationMixin.Navigate]({
             type: 'standard__recordPage',
@@ -164,7 +164,7 @@ export default class OpportunityProductTable extends NavigationMixin(LightningEl
         });
     }
 
-    // Suppression de l'OpportunityLineItem
+    // Suppression de l'OpportunityLineItem et du produit associé. 
     deleteOpportunityLineItem(opportunityLineItemId) {
         console.log('Deleting Opportunity Line Item with ID:', opportunityLineItemId);
         deleteOpportunityLineItemAndProduct({ opportunityLineItemId })
@@ -176,10 +176,10 @@ export default class OpportunityProductTable extends NavigationMixin(LightningEl
                         variant: 'success'
                     })
                 );
-                return refreshApex(this.wiredOpportunityProducts);
+                return refreshApex(this.wiredOpportunityProducts); // Rafraichissement des données serveur avec @wire. Force la récupération des données. 
             })
             .catch(error => {
-                this.dispatchEvent(
+                this.dispatchEvent( // Méthode pour créer et déclencher un événement ShowToastEvent affichant le message d'erreur. 
                     new ShowToastEvent({
                         title: 'Error deleting record',
                         message: error.body.message,

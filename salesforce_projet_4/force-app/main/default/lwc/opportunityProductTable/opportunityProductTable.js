@@ -2,6 +2,7 @@ import { LightningElement, api, wire, track } from 'lwc';
 import getOpportunityLineItems from '@salesforce/apex/OpportunityProductController.getOpportunityLineItems';
 import isUserCommercial from '@salesforce/apex/OpportunityProductController.isUserCommercial';
 import deleteOpportunityLineItemAndProduct from '@salesforce/apex/OpportunityProductController.deleteOpportunityLineItemAndProduct';
+import updateOpportunityProduct from '@salesforce/apex/OpportunityProductController.updateOpportunityProduct';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { NavigationMixin } from 'lightning/navigation';
 import { refreshApex } from '@salesforce/apex';
@@ -17,7 +18,6 @@ import OPPORTUNITY_PRODUCTS_LABEL from '@salesforce/label/c.opportunityProductsL
 import QUANTITY_LABEL from '@salesforce/label/c.QuantityLabel';
 import VIEW_PRODUCT_BUTTON from '@salesforce/label/c.ViewProductButton';
 
-
 export default class OpportunityProductTable extends NavigationMixin(LightningElement) {
     // Custom Labels
     label = {
@@ -32,19 +32,21 @@ export default class OpportunityProductTable extends NavigationMixin(LightningEl
         DeleteLabel: DELETE_LABEL,
         opportunityProductsLabel: OPPORTUNITY_PRODUCTS_LABEL,
         ViewProductButton: VIEW_PRODUCT_BUTTON
-
     };
- 
-    @api recordId; // @Api décorateur rendant une propriété publique accessible depuis l'extérieur. expose les propriétés aux composants parents. 
-    @track hasNegativeQuantity = false; // Décorateur rendant une propriété réactive. 
-    @track isCommercial = false; // propriété réactive booléenne suivie
+
+    @api recordId;
+    @track hasNegativeQuantity = false;
+    @track isCommercial = false;
+    @track draftValues = [];
+    @track products = null;
+    @track isProductListEmpty = false;
+    @track hasProducts = false;
+
+    wiredOpportunityProductsResult; // Variable to store the wire result for refreshApex
 
     get formattedLabel() {
-        // balises HTML pour le style (gras et rouge)
         return `<strong style="color: red;">${this.label.PricebookAndAddProduct}</strong>`;
-
     }
-
 
     @track columns = [
         { label: this.label.ProductNameLabel, fieldName: 'productName', type: 'text' },
@@ -56,10 +58,11 @@ export default class OpportunityProductTable extends NavigationMixin(LightningEl
             type: 'number',
             cellAttributes: {
                 style: { fieldName: 'quantityStyle' },
+                class: { fieldName: 'quantityClass' },
                 alignment: 'right'
             }
         },
-        { label: this.label.quantityInStockLabel, fieldName: 'quantityInStock', type: 'number' },
+        { label: this.label.quantityInStockLabel, fieldName: 'quantityInStock', type: 'number', editable: true },
         {
             label: this.label.SeeProductLabel,
             type: 'button',
@@ -84,11 +87,6 @@ export default class OpportunityProductTable extends NavigationMixin(LightningEl
         }
     ];
 
-    @track products = null;
-    @track isProductListEmpty = false;
-    @track hasProducts = false;
-
-    // Vérification si l'utilisateur a le profil "Commercial"
     @wire(isUserCommercial)
     wiredIsCommercial({ error, data }) {
         if (data) {
@@ -99,13 +97,14 @@ export default class OpportunityProductTable extends NavigationMixin(LightningEl
         }
     }
 
-    // Récupération des lignes de produits afin d'y appliquer un style de couleur en fonction du résultat de l'opération. ( rouge ou vert)
     @wire(getOpportunityLineItems, { opportunityId: '$recordId' }) 
-    wiredOpportunityProducts({ error, data }) {
-        if (data) {
-            console.log('Data received:', data);
-            this.products = data.map(item => {
+    wiredOpportunityProducts(result) {
+        this.wiredOpportunityProductsResult = result; // Stockez le résultat pour refreshApex
+        if (result.data) {
+            console.log('Data received:', result.data);
+            this.products = result.data.map(item => {
                 const stockDifference = item.quantityInStock - item.quantity;
+                const quantityClass = stockDifference < 0 ? 'slds-box slds-theme_shade slds-theme_alert-texture' : ''; 
                 console.log('Stock Difference:', stockDifference);
 
                 let quantityStyle = '';
@@ -118,21 +117,22 @@ export default class OpportunityProductTable extends NavigationMixin(LightningEl
 
                 return {
                     ...item,
-                    quantityStyle
+                    opportunityLineItemId: item.opportunityLineItemId,  // Assurez-vous que l'ID est présent ici
+                    quantityStyle,
+                    quantityClass
                 };
             });
             this.hasProducts = this.products.length > 0; 
             this.isProductListEmpty = !this.hasProducts;
-        } else if (error) {
-            console.error('Error fetching opportunity line items:', error);
-            this.error = error; // en cas d"erreur, stock l'erreur dans this.error
+        } else if (result.error) {
+            console.error('Error fetching opportunity line items:', result.error);
+            this.error = result.error;
             this.products = [];
-            this.isProductListEmpty = true; // Si errror alors réinitialiser la liste des produits
+            this.isProductListEmpty = true;
             this.hasProducts = false;
         }
     }
 
-    // Gestion des actions des boutons dans les lignes du tableau
     handleRowAction(event) {
         const actionName = event.detail.action.name;
         const row = event.detail.row;
@@ -152,7 +152,6 @@ export default class OpportunityProductTable extends NavigationMixin(LightningEl
         }
     }
 
-    // Méthode de Navigation vers la page du produit spécifique à Salesforce. 
     navigateToProduct(productId) {
         this[NavigationMixin.Navigate]({
             type: 'standard__recordPage',
@@ -164,7 +163,6 @@ export default class OpportunityProductTable extends NavigationMixin(LightningEl
         });
     }
 
-    // Suppression de l'OpportunityLineItem et du produit associé. 
     deleteOpportunityLineItem(opportunityLineItemId) {
         console.log('Deleting Opportunity Line Item with ID:', opportunityLineItemId);
         deleteOpportunityLineItemAndProduct({ opportunityLineItemId })
@@ -172,14 +170,14 @@ export default class OpportunityProductTable extends NavigationMixin(LightningEl
                 this.dispatchEvent(
                     new ShowToastEvent({
                         title: 'Success',
-                        message: 'Opportunity Line Item ans associated Product deleted',
+                        message: 'Opportunity Line Item and associated Product deleted',
                         variant: 'success'
                     })
                 );
-                return refreshApex(this.wiredOpportunityProducts); // Rafraichissement des données serveur avec @wire. Force la récupération des données. 
+                return refreshApex(this.wiredOpportunityProductsResult);
             })
             .catch(error => {
-                this.dispatchEvent( // Méthode pour créer et déclencher un événement ShowToastEvent affichant le message d'erreur. 
+                this.dispatchEvent(
                     new ShowToastEvent({
                         title: 'Error deleting record',
                         message: error.body.message,
@@ -189,7 +187,67 @@ export default class OpportunityProductTable extends NavigationMixin(LightningEl
             });
     }
 
-    // Mise à jour des colonnes en fonction du profil de l'utilisateur
+    handleCellChange(event) {
+        this.draftValues = event.detail.draftValues;
+        console.log('Draft Values on cell change:', this.draftValues);  // Débogage
+    }
+
+    handleSave(event) {
+        console.log('Save button clicked');
+        const updatedFields = event.detail.draftValues;
+        console.log('Updated Fields to Save:', updatedFields);
+
+        if (updatedFields.length === 0) {
+            console.warn('No changes to save.');
+            return;
+        }
+
+        const fieldsWithId = updatedFields.map(field => ({
+            ...field,
+            Id: field.opportunityLineItemId,  // Utilisation du champ correct pour l'ID
+            Quantity: field.quantityInStock   // Envoie de la nouvelle quantité à Apex
+        })).filter(item => item.Id);
+
+        console.log('Fields with IDs:', fieldsWithId);
+
+        if (fieldsWithId.length === 0) {
+            console.error('No valid Ids found for update.');
+            this.dispatchEvent(
+                new ShowToastEvent({
+                    title: 'Error',
+                    message: 'No valid Ids found for update.',
+                    variant: 'error'
+                })
+            );
+            return;
+        }
+
+        updateOpportunityProduct({ opportunityLineItem: fieldsWithId[0] })
+            .then(() => {
+                this.dispatchEvent(
+                    new ShowToastEvent({
+                        title: 'Success',
+                        message: 'Quantity In Stock updated successfully.',
+                        variant: 'success'
+                    })
+                );
+                this.draftValues = [];
+                return refreshApex(this.wiredOpportunityProductsResult);  // Rafraîchit les données après mise à jour
+            })
+            .catch(error => {
+                console.error('Error updating record:', error);
+                const errorMessage = error.body ? error.body.message : JSON.stringify(error);
+                console.log('Complete Error Message:', errorMessage);
+                this.dispatchEvent(
+                    new ShowToastEvent({
+                        title: 'Error updating record',
+                        message: errorMessage,
+                        variant: 'error'
+                    })
+                );
+            });
+    }
+
     setColumns() {
         if (this.isCommercial) {
             this.columns = this.columns.filter(column => column.label !== 'Voir Produit');

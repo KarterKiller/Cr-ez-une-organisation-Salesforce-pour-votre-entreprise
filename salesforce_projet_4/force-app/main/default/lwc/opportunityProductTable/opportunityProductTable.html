@@ -11,9 +11,12 @@
         <!-- Affiche le tableau si des produits sont disponibles -->
         <template if:true={hasProducts}>
             <lightning-datatable
-                key-field="id"
+                key-field="opportunityLineItemId"
                 data={products}
                 columns={columns}
+                draft-values={draftValues}
+                oncellchange={handleCellChange} 
+                onsave={handleSave} 
                 onrowaction={handleRowAction}
                 hide-checkbox-column>
             </lightning-datatable>

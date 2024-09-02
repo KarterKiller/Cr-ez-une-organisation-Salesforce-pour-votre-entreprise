@@ -67,6 +67,57 @@ public with sharing class OpportunityProductController {
         Profile p = [SELECT Name FROM Profile WHERE Id = :UserInfo.getProfileId()];
         return p.Name == 'Commercial';
     }
+
+
+    // Méthode pour mettre à jour quantityInStock
+    @AuraEnabled
+public static void updateOpportunityProduct(OpportunityLineItem opportunityLineItem) {
+    // Vérifier si l'utilisateur a le profil "Administrateur système"
+    Profile currentUserProfile = [SELECT Name FROM Profile WHERE Id = :UserInfo.getProfileId() LIMIT 1];
+    
+    if (currentUserProfile.Name != 'System Administrator') {
+        throw new CustomException('Seuls les utilisateurs ayant le profil "Administrateur système" sont autorisés à effectuer cette modification. Si Vous souhaitez modifier la quantité en Stock, contactez votre administrateur.');
+    }
+    
+    if (!Schema.sObjectType.OpportunityLineItem.isUpdateable()) {
+        throw new CustomException('Vous n\'avez pas les permissions nécessaires pour mettre à jour les Opportunity Line Items.');
+    }
+
+    // Vérifier que l'Id est présent
+    if (opportunityLineItem == null || opportunityLineItem.Id == null) {
+        throw new CustomException('L\'ID de l\'Opportunity Line Item est requis pour la mise à jour.');
+    }
+
+    try {
+        System.debug('OpportunityLineItem reçu pour mise à jour: ' + opportunityLineItem); 
+        
+        // Récupérer l'OpportunityLineItem et le Product2 associé
+        OpportunityLineItem existingRecord = [SELECT Id, Product2Id FROM OpportunityLineItem WHERE Id = :opportunityLineItem.Id LIMIT 1];
+        Product2 productToUpdate = [SELECT Id, QuantityInStock__c FROM Product2 WHERE Id = :existingRecord.Product2Id LIMIT 1];
+        
+        System.debug('Valeur actuelle de QuantityInStock du produit avant mise à jour: ' + productToUpdate.QuantityInStock__c);
+        
+        // Mettre à jour la quantité en stock du produit
+        // Assurez-vous de recevoir la nouvelle quantité de stock à mettre à jour à partir de l'objet OpportunityLineItem
+        // Pour ce faire, utilisez un champ de l'objet OpportunityLineItem qui contient la nouvelle quantité de stock
+        Decimal newQuantityInStock = opportunityLineItem.Quantity; // Exemple d'utilisation d'un champ existant (ajustez-le selon vos besoins)
+        productToUpdate.QuantityInStock__c = newQuantityInStock;  // Mise à jour de la quantité en stock avec la nouvelle valeur
+        
+        update productToUpdate;  // Met à jour l'enregistrement Product2 dans Salesforce
+
+        System.debug('Opportunity Line Item updated successfully with ID: ' + opportunityLineItem.Id);
+        System.debug('Valeur mise à jour de QuantityInStock du produit après mise à jour: ' + productToUpdate.QuantityInStock__c);
+        
+    } catch (DmlException e) {
+        System.debug('Error occurred while updating Opportunity Line Item: ' + e.getMessage());
+        throw new CustomException('Error updating Opportunity Product: ' + e.getMessage());
+    } catch (Exception e) {
+        System.debug('Unexpected error: ' + e.getMessage());
+        throw new CustomException('An unexpected error occurred: ' + e.getMessage());
+    }
+}
+    
+    
     // Classe utilisée pour lancer une exception si l'utilisateur n'a pas les permissions nécessaires pour accéder aux données OpportunityLineItem.
     public class CustomException extends Exception {} 
 

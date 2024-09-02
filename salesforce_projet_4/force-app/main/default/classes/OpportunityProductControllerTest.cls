@@ -1,20 +1,21 @@
 @isTest(seeAllData=false)
 private class OpportunityProductControllerTest {
 
-    @testSetup
-    static void setupTestData() {
-        Account testAccount = TestDataFactory.createTestAccount();
-        Opportunity testOpportunity = TestDataFactory.createTestOpportunity(testAccount.Id);
-        Product2 testProduct = TestDataFactory.createTestProduct();
-        Id pricebookEntryId = TestDataFactory.createTestPricebookEntry(testProduct.Id);
-        TestDataFactory.createTestOpportunityLineItem(testOpportunity.Id, pricebookEntryId);
-    }
+   
+    
+    static Account testAccount = TestDataFactory.createTestAccount();
+    static Opportunity testOpportunity = TestDataFactory.createTestOpportunity(testAccount.Id);
+    static Product2 testProduct = TestDataFactory.createTestProduct();
+    static Id pricebookEntryId = TestDataFactory.createTestPricebookEntry(testProduct.Id);
+    static OpportunityLineItem oli = TestDataFactory.createTestOpportunityLineItem(testOpportunity.Id, pricebookEntryId);
+    
 
     @isTest
     static void testGetOpportunityLineItems() {
         // Récupérer l'opportunité créée dans setupTestData
         Test.startTest();
-        Opportunity testOpportunity = [SELECT Id FROM Opportunity LIMIT 1];
+        //Opportunity testOpportunity = [SELECT Id FROM Opportunity LIMIT 1];
+        List<OpportunityLineItem> olis = [SELECT Id, OpportunityId FROM OpportunityLineItem WHERE OpportunityId = :testOpportunity.Id]; // !!!!!Probleme ici. La requete récupérer mal l'opportunityitemLine générée dans TestDataFactory
         Test.stopTest();
 
         // Vérifier que l'opportunité existe
@@ -22,16 +23,15 @@ private class OpportunityProductControllerTest {
         System.debug('ID de l\'opportunité utilisée : ' + testOpportunity.Id);
         
         // Requête pour récupérer les OpportunityLineItems après les données de test
-        List<OpportunityLineItem> olis = [SELECT Id, OpportunityId FROM OpportunityLineItem WHERE OpportunityId = :testOpportunity.Id]; // !!!!!Probleme ici. La requete récupérer mal l'opportunityitemLine générée dans TestDataFactory
         System.debug('OpportunityLineItems trouvés immédiatement après création : ' + olis.size());
 
         // Vérifier que l'OpportunityLineItem est bien inséré
         System.assert(olis.size() > 0, 'Les OpportunityLineItems doivent exister pour l\'opportunité.');
 
-        Test.startTest();
+        //Test.startTest();
         // Appeler la méthode à tester
         List<OpportunityProductController.OpportunityProductWrapper> results = OpportunityProductController.getOpportunityLineItems(testOpportunity.Id);
-        Test.stopTest();
+        //Test.stopTest();
 
         // Vérifier qu'il y a au moins un élément de ligne d'opportunité retourné
         System.debug('Résultats retournés par getOpportunityLineItems : ' + results.size());

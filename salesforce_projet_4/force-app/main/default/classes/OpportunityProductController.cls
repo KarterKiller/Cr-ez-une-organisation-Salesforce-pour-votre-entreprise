@@ -76,7 +76,7 @@ public static void updateOpportunityProduct(OpportunityLineItem opportunityLineI
     Profile currentUserProfile = [SELECT Name FROM Profile WHERE Id = :UserInfo.getProfileId() LIMIT 1];
     
     if (currentUserProfile.Name != 'System Administrator') {
-        throw new CustomException('Seuls les utilisateurs ayant le profil "Administrateur système" sont autorisés à effectuer cette modification. Si Vous souhaitez modifier la quantité en Stock, contactez votre administrateur.');
+        throw new CustomException('Seuls les utilisateurs ayant le profil "Administrateur Système" sont autorisés à effectuer cette modification. Si Vous souhaitez modifier la quantité en Stock, contactez votre Administrateur Système.');
     }
     
     if (!Schema.sObjectType.OpportunityLineItem.isUpdateable()) {

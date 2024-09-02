@@ -42,7 +42,7 @@ export default class OpportunityProductTable extends NavigationMixin(LightningEl
     @track isProductListEmpty = false;
     @track hasProducts = false;
 
-    wiredOpportunityProductsResult; // Variable to store the wire result for refreshApex
+    wiredOpportunityProductsResult; // Variable pour stocker le résultat de la requête d'apex
 
     get formattedLabel() {
         return `<strong style="color: red;">${this.label.PricebookAndAddProduct}</strong>`;
@@ -250,7 +250,7 @@ export default class OpportunityProductTable extends NavigationMixin(LightningEl
 
     setColumns() {
         if (this.isCommercial) {
-            this.columns = this.columns.filter(column => column.label !== 'Voir Produit');
+            this.columns = this.columns.filter(column => column.label !== this.label.SeeProductLabel);
         }
     }
 }

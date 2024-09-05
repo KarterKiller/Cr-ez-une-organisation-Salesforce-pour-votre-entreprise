@@ -34,21 +34,21 @@ export default class OpportunityProductTable extends NavigationMixin(LightningEl
         ViewProductButton: VIEW_PRODUCT_BUTTON
     };
 
-    @api recordId;
-    @track hasNegativeQuantity = false;
-    @track isCommercial = false;
-    @track draftValues = [];
-    @track products = null;
-    @track isProductListEmpty = false;
-    @track hasProducts = false;
+    @api recordId; // Id de l'opportunité de laquelle on récupère les produits
+    @track hasNegativeQuantity = false; // 
+    @track isCommercial = false; // Permet de savoir si l'utilisateur est commercial ou non
+    @track draftValues = []; // Liste des valeurs de mise en ligne pour les produits
+    @track products = null; // Liste des produits associés à l'opportunité
+    @track isProductListEmpty = false; // Indique si la liste des produits est vide
+    @track hasProducts = false; // Indique si la liste des produits est vide
 
     wiredOpportunityProductsResult; // Variable pour stocker le résultat de la requête d'apex
-
+    
     get formattedLabel() {
-        return `<strong style="color: red;">${this.label.PricebookAndAddProduct}</strong>`;
+        return `<strong style="color: black;">${this.label.PricebookAndAddProduct}</strong>`; 
     }
-
-    @track columns = [
+    // Liste des colonnes à afficher dans la table
+    @track columns = [ 
         { label: this.label.ProductNameLabel, fieldName: 'productName', type: 'text' },
         { label: this.label.UnitPriceLabel, fieldName: 'unitPrice', type: 'currency' },
         { label: this.label.TotalPriceLabel, fieldName: 'totalPrice', type: 'currency' },
@@ -86,7 +86,7 @@ export default class OpportunityProductTable extends NavigationMixin(LightningEl
             }
         }
     ];
-
+    // Méthode pour initialiser les colonnes en fonction de l'utilisateur
     @wire(isUserCommercial)
     wiredIsCommercial({ error, data }) {
         if (data) {
@@ -96,18 +96,18 @@ export default class OpportunityProductTable extends NavigationMixin(LightningEl
             console.error('Error checking user profile:', error);
         }
     }
-
-    @wire(getOpportunityLineItems, { opportunityId: '$recordId' }) 
-    wiredOpportunityProducts(result) {
+    // Méthode pour récupérer les produits associés à l'opportunité
+    @wire(getOpportunityLineItems, { opportunityId: '$recordId' }) // Utilisation de la méthode getOpportunityLineItems de OpportunityProductController.cls
+    wiredOpportunityProducts(result) { // Récupération du résultat de la requête d'apex
         this.wiredOpportunityProductsResult = result; // Stockez le résultat pour refreshApex
         if (result.data) {
             console.log('Data received:', result.data);
             this.products = result.data.map(item => {
                 const stockDifference = item.quantityInStock - item.quantity;
-                const quantityClass = stockDifference < 0 ? 'slds-box slds-theme_shade slds-theme_alert-texture' : ''; 
+                const quantityClass = stockDifference < 0 ? 'slds-box slds-theme_shade slds-theme_alert-texture' : ''; // Utilisation de la classe CSS pour mettre en évidence les produits en stock en rayures grises et blanches
                 console.log('Stock Difference:', stockDifference);
 
-                let quantityStyle = '';
+                let quantityStyle = ''; 
                 if (stockDifference < 0) {
                     quantityStyle = 'color: red; font-weight: bold;';
                     this.hasNegativeQuantity = true;
@@ -117,24 +117,24 @@ export default class OpportunityProductTable extends NavigationMixin(LightningEl
 
                 return {
                     ...item,
-                    opportunityLineItemId: item.opportunityLineItemId,  // Assurez-vous que l'ID est présent ici
+                    opportunityLineItemId: item.opportunityLineItemId, 
                     quantityStyle,
                     quantityClass
                 };
             });
-            this.hasProducts = this.products.length > 0; 
-            this.isProductListEmpty = !this.hasProducts;
+            this.hasProducts = this.products.length > 0; // Indique si la liste des produits est vide
+            this.isProductListEmpty = !this.hasProducts; 
         } else if (result.error) {
             console.error('Error fetching opportunity line items:', result.error);
             this.error = result.error;
-            this.products = [];
+            this.products = []; 
             this.isProductListEmpty = true;
             this.hasProducts = false;
         }
     }
-
+    // Méthode pour gérer les actions sur les lignes de la table
     handleRowAction(event) {
-        const actionName = event.detail.action.name;
+        const actionName = event.detail.action.name; 
         const row = event.detail.row;
         console.log('Action Name:', actionName);
         console.log('Row Data:', row);
@@ -151,8 +151,8 @@ export default class OpportunityProductTable extends NavigationMixin(LightningEl
                 break;
         }
     }
-
-    navigateToProduct(productId) {
+    // Méthode pour naviguer vers la page de produit
+    navigateToProduct(productId) { 
         this[NavigationMixin.Navigate]({
             type: 'standard__recordPage',
             attributes: {
@@ -162,7 +162,7 @@ export default class OpportunityProductTable extends NavigationMixin(LightningEl
             }
         });
     }
-
+    // Méthode pour supprimer un produit associé à une ligne de l'opportunité
     deleteOpportunityLineItem(opportunityLineItemId) {
         console.log('Deleting Opportunity Line Item with ID:', opportunityLineItemId);
         deleteOpportunityLineItemAndProduct({ opportunityLineItemId })
@@ -186,12 +186,12 @@ export default class OpportunityProductTable extends NavigationMixin(LightningEl
                 );
             });
     }
-
+    // Méthode pour gérer les changements de valeurs de mise en ligne
     handleCellChange(event) {
         this.draftValues = event.detail.draftValues;
         console.log('Draft Values on cell change:', this.draftValues);  // Débogage
     }
-
+    // Méthode pour enregistrer les changements de valeurs de mise en ligne après avoir cliquer sur le boutton save
     handleSave(event) {
         console.log('Save button clicked');
         const updatedFields = event.detail.draftValues;
@@ -202,7 +202,7 @@ export default class OpportunityProductTable extends NavigationMixin(LightningEl
             return;
         }
 
-        const fieldsWithId = updatedFields.map(field => ({
+        const fieldsWithId = updatedFields.map(field => ({ // On crée une nouvelle liste avec les champs avec l'ID
             ...field,
             Id: field.opportunityLineItemId,  // Utilisation du champ correct pour l'ID
             Quantity: field.quantityInStock   // Envoie de la nouvelle quantité à Apex
@@ -221,7 +221,7 @@ export default class OpportunityProductTable extends NavigationMixin(LightningEl
             );
             return;
         }
-
+        // On envoie les champs avec l'ID à la méthode updateOpportunityProduct de OpportunityProductController.cls
         updateOpportunityProduct({ opportunityLineItem: fieldsWithId[0] })
             .then(() => {
                 this.dispatchEvent(
@@ -247,7 +247,7 @@ export default class OpportunityProductTable extends NavigationMixin(LightningEl
                 );
             });
     }
-
+    // Méthode pour définir les colonnes en fonction de l'utilisateur
     setColumns() {
         if (this.isCommercial) {
             this.columns = this.columns.filter(column => column.label !== this.label.SeeProductLabel);

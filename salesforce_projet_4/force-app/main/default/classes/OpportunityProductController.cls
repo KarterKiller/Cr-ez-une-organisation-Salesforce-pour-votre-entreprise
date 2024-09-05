@@ -5,7 +5,7 @@ public with sharing class OpportunityProductController {
         if (!Schema.sObjectType.OpportunityLineItem.isAccessible()) { // Vérification si l'utilisateur à les permissions necessaires. 
             throw new CustomException('Vous n\'avez pas les permissions nécessaires pour accéder aux Opportunity Line Items.'); // CustomException permet de définir une exception personnalisée.
         }
-
+        // Requête SOQL pour récupérer les OpportunityLineItems associés à l'opportunité spécifiée par opportunityId.
         List<OpportunityProductWrapper> items = new List<OpportunityProductWrapper>();
         for (OpportunityLineItem item : [
             SELECT Product2.Name, UnitPrice, TotalPrice, Quantity, // Requete SOQL pour récupérer les OpportunityLineItems associés à l'opportunité spécifiée par opportunityId.
@@ -57,14 +57,14 @@ public with sharing class OpportunityProductController {
             throw new CustomException('Failed to delete the Opportunity Line Item or Product: ' + e.getMessage());
         }
     }
-
+    // Méthode pour vérifier si l'utilisateur est commercial
     @AuraEnabled(cacheable=true)
     public static Boolean isUserCommercial() {
         if (!Schema.sObjectType.Profile.isAccessible()) {
             throw new CustomException('Vous n\'avez pas les permissions nécessaires pour accéder aux profils.');
         }
 
-        Profile p = [SELECT Name FROM Profile WHERE Id = :UserInfo.getProfileId()];
+        Profile p = [SELECT Name FROM Profile WHERE Id = :UserInfo.getProfileId()]; 
         return p.Name == 'Commercial';
     }
 
@@ -98,17 +98,15 @@ public static void updateOpportunityProduct(OpportunityLineItem opportunityLineI
         System.debug('Valeur actuelle de QuantityInStock du produit avant mise à jour: ' + productToUpdate.QuantityInStock__c);
         
         // Mettre à jour la quantité en stock du produit
-        // Assurez-vous de recevoir la nouvelle quantité de stock à mettre à jour à partir de l'objet OpportunityLineItem
-        // Pour ce faire, utilisez un champ de l'objet OpportunityLineItem qui contient la nouvelle quantité de stock
-        Decimal newQuantityInStock = opportunityLineItem.Quantity; // Exemple d'utilisation d'un champ existant (ajustez-le selon vos besoins)
+        Decimal newQuantityInStock = opportunityLineItem.Quantity; 
         productToUpdate.QuantityInStock__c = newQuantityInStock;  // Mise à jour de la quantité en stock avec la nouvelle valeur
         
         update productToUpdate;  // Met à jour l'enregistrement Product2 dans Salesforce
 
-        System.debug('Opportunity Line Item updated successfully with ID: ' + opportunityLineItem.Id);
+        System.debug('Opportunity Line Item mis à jour avec ID: ' + opportunityLineItem.Id);
         System.debug('Valeur mise à jour de QuantityInStock du produit après mise à jour: ' + productToUpdate.QuantityInStock__c);
         
-    } catch (DmlException e) {
+    } catch (DmlException e) { 
         System.debug('Error occurred while updating Opportunity Line Item: ' + e.getMessage());
         throw new CustomException('Error updating Opportunity Product: ' + e.getMessage());
     } catch (Exception e) {
@@ -118,7 +116,7 @@ public static void updateOpportunityProduct(OpportunityLineItem opportunityLineI
 }
     
     
-    // Classe utilisée pour lancer une exception si l'utilisateur n'a pas les permissions nécessaires pour accéder aux données OpportunityLineItem.
+    // classe Apex utilisée pour encapsuler et transférer des informations relatives à un produit et à sa relation avec une opportunité dans Salesforce, facilitant ainsi la manipulation de ces données dans des interfaces utilisateur telles que les composants Lightning.
     public class CustomException extends Exception {} 
 
     public class OpportunityProductWrapper { 

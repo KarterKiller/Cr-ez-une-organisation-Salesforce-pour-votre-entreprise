@@ -1,8 +1,8 @@
 public with sharing class OpportunityProductController {
-
-    @AuraEnabled(cacheable=true) // cacheable permet de mettre en cache les résultats de l'appel à la méthode.
+    
+    @AuraEnabled(cacheable=true) 
     public static List<OpportunityProductWrapper> getOpportunityLineItems(Id opportunityId) { // Elle prends en paramètre l'Id d'un op. 
-        if (!Schema.sObjectType.OpportunityLineItem.isAccessible()) { // Vérification si l'utilisateur à les permissions necessaires. 
+        if (!Schema.sObjectType.OpportunityLineItem.isAccessible()) { // Vérification si l'utilisateur à les permissions necessaires pour accéder aux données
             throw new CustomException('Vous n\'avez pas les permissions nécessaires pour accéder aux Opportunity Line Items.'); // CustomException permet de définir une exception personnalisée.
         }
         // Requête SOQL pour récupérer les OpportunityLineItems associés à l'opportunité spécifiée par opportunityId.
@@ -11,7 +11,7 @@ public with sharing class OpportunityProductController {
             SELECT Product2.Name, UnitPrice, TotalPrice, Quantity, // Requete SOQL pour récupérer les OpportunityLineItems associés à l'opportunité spécifiée par opportunityId.
                    Product2.QuantityInStock__c, Product2.Id, Id
             FROM OpportunityLineItem
-            WHERE OpportunityId = :opportunityId
+            WHERE OpportunityId = :opportunityId // On filtre les OpportunityLineItems par l'Id de l'opportunité spécifiée
         ]) {
             items.add(new OpportunityProductWrapper( // Les résultats sont encapsulés dans des objets OpportunityProductWrapper pour faciliter leur utilisation.
                 item.Product2.Name, 
@@ -30,7 +30,7 @@ public with sharing class OpportunityProductController {
     public static void deleteOpportunityLineItemAndProduct(Id opportunityLineItemId) {
         System.debug('OpportunityLineItem ID received for deletion: ' + opportunityLineItemId);
 
-        if (!Schema.sObjectType.OpportunityLineItem.isDeletable()) {
+        if (!Schema.sObjectType.OpportunityLineItem.isDeletable()) { // Vérification de sécurité directement dans les paramétres Salesforce de l'objet pour voir si l'utilisateur a les permissions nécessaires pour faire la suppression.
             throw new CustomException('Vous n\'avez pas les permissions nécessaires pour supprimer les Opportunity Line Items.');
         }
 
@@ -41,6 +41,13 @@ public with sharing class OpportunityProductController {
                 FROM OpportunityLineItem 
                 WHERE Id = :opportunityLineItemId LIMIT 1
             ];
+
+            // Vérifie si l'utilisateur peut supprimer des enregistrements Product2
+            if (!Schema.sObjectType.Product2.isDeletable()) {
+                throw new CustomException('Vous n\'avez pas les permissions nécessaires pour supprimer les Produits.');
+
+
+            }
 
             Product2 product = [SELECT Id FROM Product2 WHERE Id = :lineItem.Product2Id LIMIT 1];
 
@@ -71,7 +78,7 @@ public with sharing class OpportunityProductController {
 
     // Méthode pour mettre à jour quantityInStock
     @AuraEnabled
-public static void updateOpportunityProduct(OpportunityLineItem opportunityLineItem) {
+    public static void updateOpportunityProduct(OpportunityLineItem opportunityLineItem) {
     // Vérifier si l'utilisateur a le profil "Administrateur système"
     Profile currentUserProfile = [SELECT Name FROM Profile WHERE Id = :UserInfo.getProfileId() LIMIT 1];
     
@@ -84,7 +91,7 @@ public static void updateOpportunityProduct(OpportunityLineItem opportunityLineI
     }
 
     // Vérifier que l'Id est présent
-    if (opportunityLineItem == null || opportunityLineItem.Id == null) {
+    if (opportunityLineItem == null || opportunityLineItem.Id == null) { // Si l'une de ces conditions est vraie, cela signifie que l'objet OpportunityLineItem n'est pas valide pour la mise à jour.
         throw new CustomException('L\'ID de l\'Opportunity Line Item est requis pour la mise à jour.');
     }
 
@@ -115,10 +122,9 @@ public static void updateOpportunityProduct(OpportunityLineItem opportunityLineI
     }
 }
     
-    
-    // classe Apex utilisée pour encapsuler et transférer des informations relatives à un produit et à sa relation avec une opportunité dans Salesforce, facilitant ainsi la manipulation de ces données dans des interfaces utilisateur telles que les composants Lightning.
+    // Classe pour lancer des exceptions personnalisés.
     public class CustomException extends Exception {} 
-
+    // Encapsulement des données d'un produit et de sa relation avec une opportunité dans Salesforce et facilitant la manipulation de ces données dans des interfaces utilisateur comme les composants Lightning.
     public class OpportunityProductWrapper { 
         @AuraEnabled public String productName { get; set; } 
         @AuraEnabled public Decimal unitPrice { get; set; }

@@ -34,7 +34,7 @@ export default class OpportunityProductTable extends NavigationMixin(LightningEl
         ViewProductButton: VIEW_PRODUCT_BUTTON
     };
 
-    @api recordId; // Id de l'opportunité de laquelle on récupère les produits
+    @api recordId; // Id de l'opportunité de laquelle on récupère les produits. @api permet de rendre cette variable accessible depuis les composants Lightning.
     @track hasNegativeQuantity = false; // 
     @track isCommercial = false; // Permet de savoir si l'utilisateur est commercial ou non
     @track draftValues = []; // Liste des valeurs de mise en ligne pour les produits
@@ -47,7 +47,7 @@ export default class OpportunityProductTable extends NavigationMixin(LightningEl
     get formattedLabel() {
         return `<strong style="color: black;">${this.label.PricebookAndAddProduct}</strong>`; 
     }
-    // Liste des colonnes à afficher dans la table
+    // Liste des colonnes à afficher dans le tableau
     @track columns = [ 
         { label: this.label.ProductNameLabel, fieldName: 'productName', type: 'text' },
         { label: this.label.UnitPriceLabel, fieldName: 'unitPrice', type: 'currency' },
@@ -132,7 +132,7 @@ export default class OpportunityProductTable extends NavigationMixin(LightningEl
             this.hasProducts = false;
         }
     }
-    // Méthode pour gérer les actions sur les lignes de la table
+    // Méthode pour gérer les actions sur les lignes du tableau 
     handleRowAction(event) {
         const actionName = event.detail.action.name; 
         const row = event.detail.row;
@@ -186,7 +186,7 @@ export default class OpportunityProductTable extends NavigationMixin(LightningEl
                 );
             });
     }
-    // Méthode pour gérer les changements de valeurs de mise en ligne
+    // Méthode pour gérer les changements de valeurs dans les cellules du tableau
     handleCellChange(event) {
         this.draftValues = event.detail.draftValues;
         console.log('Draft Values on cell change:', this.draftValues);  // Débogage
@@ -194,10 +194,10 @@ export default class OpportunityProductTable extends NavigationMixin(LightningEl
     // Méthode pour enregistrer les changements de valeurs de mise en ligne après avoir cliquer sur le boutton save
     handleSave(event) {
         console.log('Save button clicked');
-        const updatedFields = event.detail.draftValues;
+        const updatedFields = event.detail.draftValues; // Récupération des valeurs modifiées ds le tableau
         console.log('Updated Fields to Save:', updatedFields);
 
-        if (updatedFields.length === 0) {
+        if (updatedFields.length === 0) { // Vérifie si aucune modification n'a été faite (si updatedFields est vide). sinon la fonction handlesave s'arrete. 
             console.warn('No changes to save.');
             return;
         }

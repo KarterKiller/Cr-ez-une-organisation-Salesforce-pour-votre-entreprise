@@ -2,7 +2,7 @@
 public class OpportunityProductControllerTest {
 
     @isTest
-    static void testGetOpportunityLineItems_success() {
+    static void testGetOpportunityLineItems_success() { 
         try {
             // Setup data
             Account testAccount = TestDataFactory.createTestAccount();
@@ -84,6 +84,49 @@ public class OpportunityProductControllerTest {
     }
 
     @isTest
+    static void testDeleteOpportunityLineItemAndProduct_noAccess() {
+        // Crée des données de test
+        Account testAccount = TestDataFactory.createTestAccount();
+        Opportunity testOpportunity = TestDataFactory.createTestOpportunity(testAccount.Id);
+        Product2 testProduct = TestDataFactory.createTestProduct();
+        Id pricebookEntryId = TestDataFactory.createTestPricebookEntry(testProduct.Id);
+        OpportunityLineItem testOLI = TestDataFactory.createTestOpportunityLineItem(testOpportunity.Id, pricebookEntryId);
+
+         // Vérifie l'existence du profil "Read-Only"
+    Profile limitedProfile;
+    try {
+        limitedProfile = [SELECT Id FROM Profile WHERE Name = 'Standard Platform User' LIMIT 1];
+    } catch (Exception e) {
+        System.assert(false, 'Profile "Read-Only" not found. Please check the profile name.');
+    }
+  
+        // Définir un utilisateur avec des permissions limitées (non administrateur)
+        User limitedUser = new User(
+            Alias = 'luser',
+            Email = 'limiteduser@example.com',
+            EmailEncodingKey = 'UTF-8',
+            LastName = 'Limited',
+            LanguageLocaleKey = 'en_US',
+            LocaleSidKey = 'en_US',
+            ProfileId = limitedProfile.Id,
+            TimeZoneSidKey = 'America/New_York',
+            UserName = 'limiteduser@example.com'
+        );
+    
+        System.runAs(limitedUser) {  // Exécute le test avec les permissions de l'utilisateur limité
+            Test.startTest();
+            try {
+                OpportunityProductController.deleteOpportunityLineItemAndProduct(testOLI.Id);
+                System.assert(false, 'Expected CustomException was not thrown');
+            } catch (OpportunityProductController.CustomException e) {
+                // Vérifie que l'exception CustomException est levée pour un utilisateur sans accès
+                System.assertEquals('Vous n\'avez pas les permissions nécessaires pour supprimer les Opportunity Line Items.', e.getMessage());
+            }
+            Test.stopTest();
+        }
+    }
+    
+    @isTest
     static void testIsUserCommercial_success() {
         try {
             // Crée un profil de test avec le nom 'Commercial'
@@ -121,10 +164,10 @@ public class OpportunityProductControllerTest {
     @isTest
     static void testIsUserCommercial_failure() {
         try {
-            // Crée un profil de test différent de 'Commercial'
+            // Création d'un profil de test différent de 'Commercial'
             Profile otherProfile = [SELECT Id FROM Profile WHERE Name != 'Commercial' LIMIT 1];
 
-            // Crée un utilisateur de test avec un profil différent de 'Commercial'
+            
             User otherUser = new User(
                 Alias = 'ouser',
                 Email = 'otheruser@test.com',
@@ -186,7 +229,7 @@ public class OpportunityProductControllerTest {
         }
     }
 
-    // New Methods for updateOpportunityProduct
+    // Nouvelles Methodes pour updateOpportunityProduct
 
     @isTest
     static void testUpdateOpportunityProduct_success() {

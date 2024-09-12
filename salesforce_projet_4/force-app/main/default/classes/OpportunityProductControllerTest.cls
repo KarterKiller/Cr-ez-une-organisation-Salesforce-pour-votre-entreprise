@@ -162,40 +162,43 @@ public class OpportunityProductControllerTest {
     }
 
     @isTest
-    static void testIsUserCommercial_failure() {
+    static void testIsUserCommercial_failure() { 
         try {
-            // Création d'un profil de test différent de 'Commercial'
-            Profile otherProfile = [SELECT Id FROM Profile WHERE Name != 'Commercial' LIMIT 1];
+            // Création d'un profil de test différent de 'Commercial'. S'assure que même si l'utilisateur a toutes les permissions nécessaires, s'il n'a pas le bon profil (c'est-à-dire "Commercial")
+            Profile otherProfile = [SELECT Id FROM Profile WHERE Name = 'Standard User' LIMIT 1];
 
             
             User otherUser = new User(
                 Alias = 'ouser',
-                Email = 'otheruser@test.com',
+                Email = 'otheruserOk@test.com',
                 EmailEncodingKey = 'UTF-8',
-                LastName = 'TestUser',
+                LastName = 'TestUserOk',
                 LanguageLocaleKey = 'en_US',
                 LocaleSidKey = 'en_US',
                 ProfileId = otherProfile.Id,
                 TimeZoneSidKey = 'America/Los_Angeles',
-                UserName = 'otheruser@test.com'
+                UserName = 'otheruserOk@test.com'
             );
             insert otherUser;
 
             // Test en exécutant comme le nouvel utilisateur de test
-            System.runAs(otherUser) {
-                Test.startTest();
+        System.runAs(otherUser) {
+            Test.startTest();
+            try {
                 Boolean result = OpportunityProductController.isUserCommercial();
                 Test.stopTest();
 
                 // Vérifier que le résultat est false car l'utilisateur n'a pas le profil 'Commercial'
                 System.assertEquals(false, result, 'L\'utilisateur sans le profil Commercial doit retourner false.');
+            } catch (OpportunityProductController.CustomException e) {
+                System.assert(false, 'Une exception CustomException ne devrait pas être levée dans ce test: ' + e.getMessage());
             }
-        } catch (Exception e) {
-            System.debug('Exception dans testIsUserCommercial_failure: ' + e.getMessage());
-            System.assert(false, 'Une exception ne devrait pas être levée dans ce test.');
         }
+    } catch (Exception e) {
+        System.debug('Exception inattendue dans testIsUserCommercial_failure: ' + e.getMessage());
+        System.assert(false, 'Une exception inattendue ne devrait pas être levée dans ce test.');
     }
-
+}
     @isTest
     static void testIsUserCommercial_noAccess() {
         Profile restrictedProfile = [SELECT Id FROM Profile WHERE Name = 'Minimum Access - Salesforce' LIMIT 1]; // Modif ici 
